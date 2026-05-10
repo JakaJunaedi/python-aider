@@ -1,0 +1,56 @@
+# =====================
+# Python
+# =====================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# =====================
+# Virtual Environment
+# =====================
+venv/
+.venv/
+env/
+ENV/
+
+# =====================
+# Environment variables
+# =====================
+.env
+.env.*
+
+# =====================
+# Aider AI tool
+# =====================
+.aider*
+
+# =====================
+# Logs
+# =====================
+*.log
+
+# =====================
+# IDE / Editor
+# =====================
+.vscode/
+.idea/
+
+# =====================
+# Docker
+# =====================
+docker-compose.override.yml
+
+# =====================
+# OS
+# =====================
+.DS_Store
+Thumbs.db
+
+# =====================
+# Cache / temp
+# =====================
+*.cache
+.aider.chat.history.md
+.aider.input.history
