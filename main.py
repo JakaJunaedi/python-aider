@@ -3,16 +3,18 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from dotenv import load_dotenv
+import os
 import httpx
 import json
-import os
 
-load_dotenv()
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+load_dotenv(os.path.join(BASE_DIR, ".env"))
+print("=== API KEY ===", os.getenv("API_KEY_OPENROUTER"))
 
 app = FastAPI(title="Coding Assistant")
 templates = Jinja2Templates(directory="templates")
 
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+OPENROUTER_API_KEY = os.getenv("API_KEY_OPENROUTER")
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 MODEL = "meta-llama/llama-3.3-70b-instruct"
 
@@ -46,7 +48,7 @@ class ChatMessage(BaseModel):
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(request, "index.html")
 
 @app.post("/chat")
 async def chat(body: ChatMessage):
