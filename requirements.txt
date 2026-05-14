@@ -6,3 +6,6 @@ python-multipart==0.0.9
 pydantic==2.8.2
 python-dotenv==1.0.1
 starlette==0.41.3
+sqlalchemy==2.0.36
+aiosqlite==0.20.0
+PyPDF2==3.0.1
