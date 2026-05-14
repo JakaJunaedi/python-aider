@@ -53,4 +53,7 @@ Thumbs.db
 # =====================
 *.cache
 .aider.chat.history.md
-.aider.input.history
+.aider.input.historychat_history.db
+
+chat_history.db
+*.db
