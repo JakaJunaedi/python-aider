@@ -1,236 +1,178 @@
-from fastapi import FastAPI, Request, Depends, UploadFile, File, Form
-from fastapi.responses import HTMLResponse, StreamingResponse
+"""
+Jackode Engineer — AI Testing Agent Dashboard
+FastAPI backend + Jinja2 templates + Chat API
+"""
+
+from fastapi import FastAPI, Request, UploadFile, File
+from fastapi.responses import HTMLResponse, StreamingResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel
+from contextlib import asynccontextmanager
 from dotenv import load_dotenv
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, update
-from database import init_db, get_db, AsyncSessionLocal, Session, Message
 import httpx
 import json
-import os
 import uuid
-import base64
-import PyPDF2
-import io
+import os
 
 load_dotenv()
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+OPENROUTER_KEY = os.getenv("API_KEY_OPENROUTER", "")
+OPENROUTER_URL = os.getenv("API_URL_OPENROUTER", "https://openrouter.ai/api/v1/chat/completions")
+MODEL_NAME = os.getenv("MODEL_NAME", "google/gemini-2.5-flash-lite")
 
-app = FastAPI(title="Coding Assistant")
+# In-memory store
+sessions_store: dict = {}
+messages_store: dict = {}
+
+def _ensure_session(sid: str) -> str:
+    if not sid or sid not in sessions_store:
+        sid = str(uuid.uuid4())
+        sessions_store[sid] = {"id": sid, "title": "New Chat", "created_at": ""}
+        messages_store[sid] = []
+    return sid
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    sid = str(uuid.uuid4())
+    sessions_store[sid] = {"id": sid, "title": "New Chat", "created_at": ""}
+    messages_store[sid] = []
+    yield
+
+app = FastAPI(title="Jackode Engineer", lifespan=lifespan)
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
 
-OPENROUTER_API_KEY = os.getenv("API_KEY_OPENROUTER")
-OPENROUTER_API_URL = os.getenv("API_URL_OPENROUTER", "https://openrouter.ai/api/v1/chat/completions")
-MODEL = "meta-llama/llama-3.3-70b-instruct"
+MOCK_STEPS = [
+    {"id": 1,  "text": "Initialize test environment",           "status": "current"},
+    {"id": 2,  "text": "Load project configuration",             "status": "pending"},
+    {"id": 3,  "text": "Connect to target database",             "status": "pending"},
+    {"id": 4,  "text": "Run unit test suite (187 cases)",        "status": "pending"},
+    {"id": 5,  "text": "Execute integration tests",              "status": "pending"},
+    {"id": 6,  "text": "Run end-to-end scenarios",               "status": "pending"},
+    {"id": 7,  "text": "Validate API contract (OpenAPI spec)",   "status": "pending"},
+    {"id": 8,  "text": "Performance benchmark (100 rps target)", "status": "pending"},
+    {"id": 9,  "text": "Security scan (OWASP top 10)",           "status": "pending"},
+    {"id": 10, "text": "Generate test report & coverage summary","status": "pending"},
+]
 
-# Extensions yang didukung
-IMAGE_EXTS   = {".jpg", ".jpeg", ".png", ".gif", ".webp"}
-TEXT_EXTS    = {".py", ".js", ".ts", ".html", ".css", ".md", ".txt",
-                ".json", ".yaml", ".yml", ".xml", ".sh", ".bash",
-                ".sql", ".php", ".go", ".rs", ".java", ".cpp", ".c",
-                ".cs", ".rb", ".swift", ".kt", ".vue", ".jsx", ".tsx",
-                ".env", ".toml", ".ini", ".dockerfile", ".gitignore"}
-PDF_EXTS     = {".pdf"}
-MAX_FILE_MB  = 10
+MOCK_STATS = {
+    "total_tests": 187, "passed": 152, "failed": 12, "skipped": 23,
+    "coverage_pct": 78.4, "duration_sec": 34.2, "agent_status": "idle",
+    "last_run": "2026-05-21 08:42:17",
+}
 
-SYSTEM_PROMPT = """Anda adalah agen AI coding yang ahli (tingkat insinyur perangkat lunak senior).
-
-Tujuan utama:
-- Bantu pengguna membangun, memperbaiki, dan memahami kode dengan efisien dan benar.
-
-Bahasa:
-- Jawab dalam Bahasa Indonesia, kecuali istilah teknis atau kode.
-
-Perilaku:
-- Fokus pada solusi, bukan penjelasan panjang
-- Berikan jawaban singkat dan langsung
-
-Gaya coding:
-- Tulis kode yang siap produksi
-- Gunakan best practice modern
-
-Aturan debugging:
-- Identifikasi akar masalah
-- Berikan perbaikan langsung
-
-Gaya interaksi:
-- Seperti pair programmer senior
-- Langsung membantu"""
-
-@app.on_event("startup")
-async def startup():
-    await init_db()
-
-class ChatMessage(BaseModel):
-    message: str
-    session_id: str | None = None
-
+# ── Pages ────────────────────────────────────────────────
 @app.get("/", response_class=HTMLResponse)
-async def index(request: Request):
-    return templates.TemplateResponse(request, "index.html")
+async def dashboard(request: Request):
+    return templates.TemplateResponse("dashboard.html", {
+        "request": request, "steps": MOCK_STEPS, "stats": MOCK_STATS,
+    })
 
-@app.post("/session/new")
-async def new_session(db: AsyncSession = Depends(get_db)):
-    session = Session(id=str(uuid.uuid4()), title="New Chat")
-    db.add(session)
-    await db.commit()
-    await db.refresh(session)
-    return {"session_id": session.id, "title": session.title}
+@app.get("/chat", response_class=HTMLResponse)
+async def chat_page(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
+# ── Chat API ─────────────────────────────────────────────
 @app.get("/sessions")
-async def get_sessions(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Session).order_by(Session.updated_at.desc()))
-    sessions = result.scalars().all()
-    return [{"id": s.id, "title": s.title, "updated_at": str(s.updated_at)} for s in sessions]
+async def list_sessions():
+    return JSONResponse(list(sessions_store.values()))
 
 @app.get("/history/{session_id}")
-async def get_history(session_id: str, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(Message).where(Message.session_id == session_id).order_by(Message.created_at.asc())
-    )
-    messages = result.scalars().all()
-    return [{"role": m.role, "content": m.content} for m in messages]
+async def get_history(session_id: str):
+    return JSONResponse(messages_store.get(session_id, []))
 
 @app.delete("/session/{session_id}")
-async def delete_session(session_id: str, db: AsyncSession = Depends(get_db)):
-    await db.execute(Message.__table__.delete().where(Message.session_id == session_id))
-    await db.execute(Session.__table__.delete().where(Session.id == session_id))
-    await db.commit()
-    return {"status": "deleted"}
+async def delete_session(session_id: str):
+    sessions_store.pop(session_id, None)
+    messages_store.pop(session_id, None)
+    return JSONResponse({"ok": True})
 
-# ── UPLOAD FILE ──────────────────────────────────────
 @app.post("/upload")
 async def upload_file(file: UploadFile = File(...)):
-    ext = os.path.splitext(file.filename)[1].lower()
-    content = await file.read()
+    try:
+        content = await file.read()
+        filename = file.filename or "unknown"
+        ext = os.path.splitext(filename)[1].lower()
+        if ext in (".jpg", ".jpeg", ".png", ".gif", ".webp"):
+            import base64
+            b64 = base64.b64encode(content).decode()
+            mime = file.content_type or "image/png"
+            return JSONResponse({"type": "image", "filename": filename, "preview": f"data:{mime};base64,{b64}", "mime": mime, "data": b64})
+        elif ext == ".pdf":
+            try:
+                from PyPDF2 import PdfReader; from io import BytesIO
+                reader = PdfReader(BytesIO(content))
+                text = "\n".join((p.extract_text() or "") for p in reader.pages)
+                return JSONResponse({"type": "pdf", "filename": filename, "content": text, "preview": text[:200].replace("\n", " "), "pages": len(reader.pages)})
+            except Exception:
+                return JSONResponse({"type": "text", "filename": filename, "content": "[PDF extraction failed]", "preview": filename, "ext": ".pdf"})
+        else:
+            try:
+                text = content.decode("utf-8", errors="replace")
+            except Exception:
+                text = "[Binary file]"
+            return JSONResponse({"type": "text", "filename": filename, "content": text, "preview": text[:200].replace("\n", " "), "ext": ext})
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=400)
 
-    # Cek ukuran file
-    if len(content) > MAX_FILE_MB * 1024 * 1024:
-        return {"error": f"File terlalu besar. Maksimal {MAX_FILE_MB}MB."}
-
-    # Gambar → base64
-    if ext in IMAGE_EXTS:
-        mime = "image/jpeg" if ext in {".jpg", ".jpeg"} else f"image/{ext[1:]}"
-        b64  = base64.b64encode(content).decode()
-        return {
-            "type": "image",
-            "filename": file.filename,
-            "mime": mime,
-            "data": b64,
-            "preview": f"data:{mime};base64,{b64}"
-        }
-
-    # PDF → extract teks
-    if ext in PDF_EXTS:
-        try:
-            reader   = PyPDF2.PdfReader(io.BytesIO(content))
-            text     = "\n".join(page.extract_text() or "" for page in reader.pages)
-            preview  = text[:500] + ("..." if len(text) > 500 else "")
-            return {
-                "type": "pdf",
-                "filename": file.filename,
-                "content": text,
-                "preview": preview,
-                "pages": len(reader.pages)
-            }
-        except Exception as e:
-            return {"error": f"Gagal membaca PDF: {str(e)}"}
-
-    # File teks / kode
-    if ext in TEXT_EXTS or ext == "":
-        try:
-            text    = content.decode("utf-8", errors="replace")
-            preview = text[:300] + ("..." if len(text) > 300 else "")
-            return {
-                "type": "text",
-                "filename": file.filename,
-                "ext": ext,
-                "content": text,
-                "preview": preview,
-                "lines": len(text.splitlines())
-            }
-        except Exception as e:
-            return {"error": f"Gagal membaca file: {str(e)}"}
-
-    return {"error": f"Format file '{ext}' tidak didukung."}
-
-# ── CHAT ─────────────────────────────────────────────
 @app.post("/chat")
-async def chat(body: ChatMessage, db: AsyncSession = Depends(get_db)):
-    session_id = body.session_id
+async def chat_stream(request: Request):
+    body = await request.json()
+    user_message = body.get("message", "")
+    session_id = _ensure_session(body.get("session_id", ""))
 
-    if not session_id:
-        session = Session(id=str(uuid.uuid4()), title="New Chat")
-        db.add(session)
-        await db.commit()
-        session_id = session.id
+    if not user_message:
+        return JSONResponse({"error": "Empty message"}, status_code=400)
 
-    result = await db.execute(
-        select(Message).where(Message.session_id == session_id).order_by(Message.created_at.asc())
-    )
-    history = result.scalars().all()
+    messages_store.setdefault(session_id, []).append({"role": "user", "content": user_message})
+    if sessions_store.get(session_id, {}).get("title") == "New Chat":
+        sessions_store[session_id]["title"] = user_message[:50].replace("\n", " ")
 
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-    for msg in history:
-        messages.append({"role": msg.role, "content": msg.content})
-    messages.append({"role": "user", "content": body.message})
+    history = messages_store.get(session_id, [])
+    payload = [{"role": "system", "content": "You are Jackode Engineer, an AI testing agent assistant. Help with code, testing, debugging, and software engineering."}]
+    payload += [{"role": m["role"], "content": m["content"]} for m in history]
 
-    user_msg = Message(session_id=session_id, role="user", content=body.message)
-    db.add(user_msg)
-
-    if not history:
-        # Buat judul dari pesan pertama (strip tag file jika ada)
-        clean = body.message.split("\n")[0].replace("[FILE:", "").strip()
-        title = clean[:40] + ("..." if len(clean) > 40 else "")
-        await db.execute(update(Session).where(Session.id == session_id).values(title=title))
-
-    await db.commit()
-
-    async def generate():
-        full_response = ""
+    async def event_stream():
+        full = ""
         try:
-            timeout = httpx.Timeout(connect=10.0, read=120.0, write=10.0, pool=10.0)
-            async with httpx.AsyncClient(timeout=timeout) as client:
-                response = await client.post(
-                    OPENROUTER_API_URL,
-                    headers={
-                        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-                        "Content-Type": "application/json",
-                        "HTTP-Referer": "http://localhost:8000",
-                        "X-Title": "Jack AI Assistant"
-                    },
-                    json={
-                        "model": MODEL,
-                        "messages": messages,
-                        "temperature": 0.7,
-                        "max_tokens": 2048,
-                    }
-                )
-                data = response.json()
+            async with httpx.AsyncClient(timeout=120) as client:
+                async with client.stream("POST", OPENROUTER_URL, json={
+                    "model": MODEL_NAME, "messages": payload, "stream": True, "temperature": 0.7, "max_tokens": 2048
+                }, headers={"Authorization": f"Bearer {OPENROUTER_KEY}", "Content-Type": "application/json"}) as resp:
+                    # ── Periksa HTTP status dari OpenRouter ──
+                    if resp.status_code != 200:
+                        try:
+                            body = await resp.aread()
+                            err_raw = body.decode("utf-8", errors="replace")
+                            try:
+                                err_json = json.loads(err_raw)
+                                err_msg = err_json.get("error", {}).get("message", "") or str(err_json)
+                            except json.JSONDecodeError:
+                                err_msg = err_raw
+                        except Exception:
+                            err_msg = f"HTTP {resp.status_code}"
+                        yield f"data: {json.dumps({'error': f'API Error ({resp.status_code}): {err_msg}'})}\n\n"
+                        yield "data: [DONE]\n\n"
+                        return
 
-                if "choices" in data:
-                    full_response = data["choices"][0]["message"]["content"]
-                    for chunk in full_response.split(" "):
-                        yield f"data: {json.dumps({'text': chunk + ' ', 'session_id': session_id})}\n\n"
-                else:
-                    error = data.get("error", {}).get("message", "Unknown error")
-                    yield f"data: {json.dumps({'error': error})}\n\n"
-
+                    async for line in resp.aiter_lines():
+                        if not line.startswith("data: "): continue
+                        ds = line[6:]
+                        if ds == "[DONE]": break
+                        try:
+                            ch = json.loads(ds)
+                            c = ch.get("choices", [{}])[0].get("delta", {}).get("content", "")
+                            if c: full += c; yield f"data: {json.dumps({'text': c, 'session_id': session_id})}\n\n"
+                        except (json.JSONDecodeError, KeyError, IndexError): pass
         except Exception as e:
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
-
-        if full_response:
-            async with AsyncSessionLocal() as save_db:
-                ai_msg = Message(session_id=session_id, role="assistant", content=full_response)
-                save_db.add(ai_msg)
-                await save_db.commit()
-
+        if full:
+            messages_store.setdefault(session_id, []).append({"role": "assistant", "content": full})
         yield "data: [DONE]\n\n"
 
-    return StreamingResponse(generate(), media_type="text/event-stream")
+    return StreamingResponse(event_stream(), media_type="text/event-stream", headers={"X-Session-Id": session_id})
 
+# ── Entrypoint ───────────────────────────────────────────
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

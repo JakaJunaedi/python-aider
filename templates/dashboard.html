@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jackode Engineer - AI Testing Agent Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+{% raw %}tailwind.config={theme:{extend:{colors:{brand:{green:'#10B981'},surface:'#F8F9FA'}}}}{% endraw %}</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+<style>
+{% raw %}*{font-family:'Inter',system-ui,sans-serif}body{overflow:hidden}
+.scroll-thin::-webkit-scrollbar{width:5px}.scroll-thin::-webkit-scrollbar-track{background:transparent}.scroll-thin::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:10px}
+.menu-item-active{background:linear-gradient(135deg,#EEF2FF 0%,#E0E7FF 100%);color:#4338CA;font-weight:600}
+.menu-item-active::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;background:#6366F1;border-radius:0 3px 3px 0}
+.chat-messages{scroll-behavior:smooth}.chat-bubble{max-width:85%;word-wrap:break-word}
+.chat-bubble pre{border-radius:8px;margin:6px 0}.chat-bubble code{font-family:'JetBrains Mono',monospace;font-size:12px}
+.chat-bubble pre code{background:none;padding:0}
+.chat-bubble .copy-btn{position:absolute;top:6px;right:8px;font-size:10px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);color:#a5b4fc;padding:2px 8px;border-radius:4px;cursor:pointer;font-family:'Inter',sans-serif}
+.chat-input-area textarea{font-family:'Inter',system-ui,sans-serif;resize:none;max-height:120px}
+.chat-input-area textarea::placeholder{color:#9ca3af}
+.typing{display:flex;gap:4px;padding:4px 0}.typing span{width:6px;height:6px;border-radius:50%;background:#a5b4fc;animation:typing 1.4s infinite}
+.typing span:nth-child(2){animation-delay:0.2s}.typing span:nth-child(3){animation-delay:0.4s}
+@keyframes typing{0%,60%,100%{transform:scale(0.6);opacity:0.5}30%{transform:scale(1);opacity:1}}
+.session-item-active{background:#EEF2FF;color:#4338CA}
+{% endraw %}</style>
+</head>
+<body class="h-screen flex bg-white text-gray-800">
+
+<!-- COLUMN 1: SIDEBAR -->
+<aside class="w-64 flex-shrink-0 bg-[#F8F9FA] border-r border-gray-200 flex flex-col h-full">
+<div class="px-5 py-6 border-b border-gray-200"><div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-md shadow-emerald-200"><svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9.75 3.104v5.714a2.25 2.25 0 0 1-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 0 1 4.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0 1 12 15a9.065 9.065 0 0 0-6.23.693L5 14.5m14.8.8 1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0 1 12 21c-2.773 0-5.491-.235-8.135-.687-1.718-.293-2.3-2.379-1.067-3.61L5 14.5"/></svg></div>
+<div><h1 class="text-base font-bold tracking-tight text-gray-900 leading-tight">Jackode</h1><p class="text-[10px] font-semibold uppercase tracking-widest text-emerald-600">Engineer</p></div>
+</div></div>
+<nav class="flex-1 overflow-y-auto px-3 py-4 space-y-5 scroll-thin">
+<div><p class="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400 mb-2 px-3">Dashboard</p><ul class="space-y-0.5">
+<li><a href="#" class="relative flex items-center gap-3 px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"/></svg> Home</a></li>
+<li><a href="#" class="menu-item-active relative flex items-center gap-3 px-3 py-2 text-sm rounded-lg"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z"/></svg> MCP Tests<span class="ml-auto w-1.5 h-1.5 rounded-full bg-indigo-500"></span></a></li>
+</ul></div>
+<div><p class="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400 mb-2 px-3">Testing</p><ul class="space-y-0.5">
+<li><a href="#" class="relative flex items-center gap-3 px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.5v15m7.5-7.5h-15"/></svg> Create Tests</a></li>
+<li><a href="#" class="relative flex items-center gap-3 px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 0 1 0 3.75H5.625a1.875 1.875 0 0 1 0-3.75Z"/></svg> All Tests</a></li>
+<li><a href="#" class="relative flex items-center gap-3 px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 17.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z"/></svg> Test Lists</a></li>
+<li><a href="#" class="relative flex items-center gap-3 px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z"/></svg> Monitoring</a></li>
+</ul></div>
+<div><p class="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400 mb-2 px-3">Settings</p><ul class="space-y-0.5">
+<li><a href="#" class="relative flex items-center gap-3 px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/></svg> Profile</a></li>
+<li><a href="#" class="relative flex items-center gap-3 px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z"/></svg> Plan &amp; Billing</a></li>
+<li><a href="#" class="relative flex items-center gap-3 px-3 py-2 text-sm text-gray-600 rounded-lg hover:bg-gray-100"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1 1 21.75 8.25Z"/></svg> API Keys</a></li>
+</ul></div>
+</nav>
+<div class="px-3 pb-4 pt-1"><div class="rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 p-4 text-white shadow-lg shadow-emerald-200/50">
+<div class="flex items-start justify-between mb-2"><p class="text-xs font-bold uppercase tracking-wider opacity-80">Promo</p><span class="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-semibold">LIMITED</span></div>
+<p class="text-base font-bold leading-tight mb-1">1 Month Free Trial</p><p class="text-[11px] leading-relaxed opacity-80 mb-3">Unlock all features, unlimited MCP tests, and priority support.</p>
+<button class="w-full py-2 bg-white text-emerald-700 text-sm font-bold rounded-lg hover:bg-emerald-50 transition-colors shadow-sm">Upgrade Now</button>
+</div></div>
+</aside>
+
+<!-- COLUMN 2 -->
+<main class="w-80 flex-shrink-0 flex flex-col h-full bg-white border-r border-gray-100 overflow-hidden">
+<div class="flex-shrink-0 px-5 pt-4 pb-0 border-b border-gray-100">
+<nav class="flex items-center gap-1.5 text-xs text-gray-400 mb-3">
+<a href="#" class="hover:text-gray-600">MCP Tests</a>
+<svg class="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
+<a href="#" class="hover:text-gray-600">acme corp</a>
+<svg class="w-3 h-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>
+<span class="text-gray-500 font-medium truncate max-w-[140px]">Verify user...</span>
+</nav>
+<div class="flex gap-5">
+<button id="tabOverview" onclick="switchTab('overview')" class="pb-3 text-sm font-semibold text-gray-900 border-b-2 border-indigo-500 -mb-[1px]">Overview</button>
+<button id="tabChat" onclick="switchTab('chat')" class="pb-3 text-sm font-medium text-gray-400 border-b-2 border-transparent hover:text-gray-600">Chat</button>
+</div>
+</div>
+
+<!-- OVERVIEW CONTENT -->
+<div id="overviewContent" class="flex-1 overflow-y-auto px-5 py-4 scroll-thin space-y-3">
+<div class="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+<div class="px-4 py-2.5 border-b border-gray-100 bg-gray-50/50 flex items-center gap-2">
+<svg class="w-4 h-4 text-indigo-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456Z"/></svg>
+<h3 class="text-sm font-semibold text-gray-800">Runtime Refined Test Plan</h3></div>
+<div class="p-4"><textarea rows="3" class="w-full text-sm text-gray-700 bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:border-indigo-400 focus:ring-1 focus:ring-indigo-400" placeholder="Enter test plan instructions...">Verify that the user can successfully register for the newsletter.</textarea>
+<div class="flex items-center justify-end mt-3"><button class="px-4 py-2 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 shadow-sm shadow-indigo-200 flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182"/></svg> Update &amp; Re-generate Steps</button></div></div></div>
+<div class="flex items-center justify-between"><h3 class="text-sm font-bold uppercase tracking-wider text-gray-400">Test Steps</h3><span class="text-xs text-gray-400">{{ steps|length }} steps</span></div>
+<div class="space-y-2">
+{% for step in steps %}
+<div class="flex items-center gap-3 px-3 py-2.5 rounded-xl border transition-all {% if step.status == 'current' %}bg-[#E6F4EA] border-emerald-400{% else %}border-gray-200{% endif %}">
+<span class="w-6 h-6 flex items-center justify-center rounded-lg text-[10px] font-bold flex-shrink-0 {% if step.status == 'current' %}bg-emerald-600 text-white shadow-sm shadow-emerald-200{% else %}bg-gray-100 text-gray-400{% endif %}">{{ step.id }}</span>
+<span class="flex-1 text-xs font-medium truncate {% if step.status == 'current' %}text-emerald-800{% else %}text-gray-400{% endif %}">{{ step.text }}</span>
+{% if step.status == 'current' %}
+<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-200/60 rounded-full text-[10px] font-semibold text-emerald-700 flex-shrink-0"><span class="w-1 h-1 rounded-full bg-emerald-500"></span>Active</span>
+{% else %}
+<span class="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 rounded-full text-[10px] font-medium text-gray-400 flex-shrink-0"><span class="w-1 h-1 rounded-full bg-gray-300"></span></span>
+{% endif %}
+</div>
+{% endfor %}
+</div>
+</div>
+
+<!-- CHAT SIDEBAR -->
+<div id="chatSidebar" class="flex-1 flex flex-col overflow-y-auto scroll-thin px-3 py-3 space-y-4" style="display:none">
+<div><p class="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400 mb-2 px-1">Quick Actions</p><div class="space-y-0.5">
+<button onclick="sendQuick('Explain this code: ')" class="w-full text-left flex items-center gap-2 px-2 py-1.5 text-xs text-gray-600 rounded-md hover:bg-gray-100">🔍 Explain Code</button>
+<button onclick="sendQuick('Debug this error: ')" class="w-full text-left flex items-center gap-2 px-2 py-1.5 text-xs text-gray-600 rounded-md hover:bg-gray-100">🐛 Debug Error</button>
+<button onclick="sendQuick('Review and improve: ')" class="w-full text-left flex items-center gap-2 px-2 py-1.5 text-xs text-gray-600 rounded-md hover:bg-gray-100">✨ Code Review</button>
+<button onclick="sendQuick('Write a function that ')" class="w-full text-left flex items-center gap-2 px-2 py-1.5 text-xs text-gray-600 rounded-md hover:bg-gray-100">📝 Write Function</button>
+<button onclick="sendQuick('Write unit tests for: ')" class="w-full text-left flex items-center gap-2 px-2 py-1.5 text-xs text-gray-600 rounded-md hover:bg-gray-100">🧪 Write Tests</button>
+</div></div>
+<div class="flex-1 flex flex-col min-h-0"><div class="flex items-center justify-between px-1 mb-2"><p class="text-[10px] font-bold uppercase tracking-[0.18em] text-gray-400">Chat History</p><button onclick="newChat()" class="text-[10px] font-semibold text-indigo-600 hover:text-indigo-700">+ New</button></div>
+<div id="historyList" class="flex-1 overflow-y-auto space-y-0.5 text-xs"><p class="text-gray-400 italic px-1 py-2">Loading...</p></div></div>
+</div>
+</main>
+
+<!-- COLUMN 3 -->
+<aside class="flex-1 flex flex-col h-full bg-gray-50/80 overflow-hidden">
+
+<!-- PREVIEW PANEL -->
+<div id="previewPanel">
+<div class="flex items-center gap-2 px-5 py-3 bg-emerald-50 border-b border-emerald-200"><svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg><span class="text-sm font-semibold text-emerald-700">Pass</span><span class="text-sm text-emerald-600">Verify user can subscribe to newsletter</span></div>
+<div class="m-4 rounded-xl overflow-hidden border border-gray-300 shadow-lg bg-white flex flex-col" style="height:calc(100vh - 90px)">
+<div class="flex-shrink-0 bg-gray-100 border-b border-gray-200 px-3 py-2 flex items-center gap-2"><div class="flex items-center gap-1.5 flex-shrink-0"><span class="w-3 h-3 rounded-full bg-red-400"></span><span class="w-3 h-3 rounded-full bg-amber-400"></span><span class="w-3 h-3 rounded-full bg-emerald-400"></span></div><div class="flex-1 mx-2"><div class="flex items-center bg-white rounded-md border border-gray-300 px-3 py-1"><svg class="w-3.5 h-3.5 text-emerald-500 mr-2 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418"/></svg><span class="text-xs text-gray-500 truncate">https://acme.inc/newsletter</span></div></div><div class="flex items-center gap-1 flex-shrink-0"><span class="w-1 h-1 rounded-full bg-gray-400"></span><span class="w-1 h-1 rounded-full bg-gray-400"></span><span class="w-1 h-1 rounded-full bg-gray-400"></span></div></div>
+<div class="flex-1 overflow-y-auto bg-white">
+<header class="px-6 py-3 border-b border-gray-100 flex items-center justify-between"><div class="flex items-center gap-2"><div class="w-6 h-6 rounded bg-indigo-600 flex items-center justify-center"><span class="text-[10px] font-bold text-white">A</span></div><span class="text-sm font-bold text-gray-900">Acme Corp</span></div><nav class="hidden sm:flex items-center gap-5 text-xs font-medium text-gray-500"><a href="#" class="hover:text-gray-800">Product</a><a href="#" class="hover:text-gray-800">Docs</a><a href="#" class="hover:text-gray-800">Pricing</a><a href="#" class="hover:text-gray-800">Blog</a></nav><div class="flex items-center gap-2"><button class="text-xs font-medium text-gray-600 hover:text-gray-900">Log in</button><button class="text-xs font-semibold bg-gray-900 text-white px-3 py-1.5 rounded-md hover:bg-gray-800">Get Started</button></div></header>
+<section class="px-6 py-12 text-center max-w-lg mx-auto"><p class="text-xs font-semibold uppercase tracking-widest text-emerald-600 mb-3">Newsletter</p><h2 class="text-2xl font-bold text-gray-900 leading-tight mb-2">Build your next idea <span class="text-emerald-600">faster than ever</span>.</h2><p class="text-sm text-gray-500 mb-6">Join thousands of developers who ship with Acme every day.</p><div class="inline-flex flex-col items-center"><span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-3 py-0.5 rounded-full border border-emerald-300 mb-1.5">Current</span><button class="px-6 py-2.5 bg-emerald-600 text-white text-sm font-semibold rounded-lg hover:bg-emerald-700 border-2 border-emerald-500 shadow-lg shadow-emerald-200 flex items-center gap-1.5">Join Newsletter<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"/></svg></button></div></section>
+<section class="px-6 pb-10"><div class="grid grid-cols-3 gap-3 max-w-lg mx-auto">
+<div class="bg-gray-50 rounded-xl p-4 text-center border border-gray-100"><div class="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center mx-auto mb-2"><svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg></div><p class="text-xs font-semibold text-gray-800">Lightning Fast</p><p class="text-[10px] text-gray-400 mt-1">Sub-100ms response</p></div>
+<div class="bg-gray-50 rounded-xl p-4 text-center border border-gray-100"><div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center mx-auto mb-2"><svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z"/></svg></div><p class="text-xs font-semibold text-gray-800">Secure by Default</p><p class="text-[10px] text-gray-400 mt-1">SOC 2 compliant</p></div>
+<div class="bg-gray-50 rounded-xl p-4 text-center border border-gray-100"><div class="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center mx-auto mb-2"><svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 21a9.004 9.004 0 0 0 8.716-6.747M12 21a9.004 9.004 0 0 1-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 0 1 7.843 4.582M12 3a8.997 8.997 0 0 0-7.843 4.582m15.686 0A11.953 11.953 0 0 1 12 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0 1 21 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0 1 12 16.5c-3.162 0-6.133-.815-8.716-2.247m0 0A9.015 9.015 0 0 1 3 12c0-1.605.42-3.113 1.157-4.418"/></svg></div><p class="text-xs font-semibold text-gray-800">Global Scale</p><p class="text-[10px] text-gray-400 mt-1">35 edge regions</p></div>
+</div></section></div></div></div>
+
+<!-- CHAT AREA -->
+<div id="chatArea" class="flex-1 flex flex-col h-full" style="display:none">
+<div class="flex-1 overflow-y-auto px-4 py-3 scroll-thin chat-messages" id="messages">
+<div class="flex flex-col items-center justify-center h-full text-center" id="welcome">
+<div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center mb-3 shadow-lg shadow-emerald-200"><svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456Z"/></svg></div>
+<h2 class="text-lg font-bold text-gray-800 mb-1">Jackode Engineer Chat</h2>
+<p class="text-sm text-gray-400 max-w-sm">Ask about test plans, debugging, or coding help. Upload files for analysis.</p>
+<div class="flex flex-wrap gap-2 justify-center mt-4">
+<span onclick="sendChip('Analyze the current test steps for acme corp')" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-xs text-gray-600 cursor-pointer">Analyze test steps</span>
+<span onclick="sendChip('How do I automate MCP tests?')" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-xs text-gray-600 cursor-pointer">Automate MCP tests</span>
+<span onclick="sendChip('Write a newsletter signup test')" class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-full text-xs text-gray-600 cursor-pointer">Newsletter test</span>
+</div></div></div>
+<div id="attachedFiles" class="flex-shrink-0 flex flex-wrap gap-2 px-4 pb-2" style="display:none"></div>
+<div class="flex-shrink-0 border-t border-gray-200 bg-white px-4 py-3 chat-input-area">
+<div class="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 focus-within:border-indigo-400 focus-within:ring-1 focus-within:ring-indigo-400">
+<label class="flex-shrink-0 cursor-pointer text-gray-400 hover:text-indigo-600" title="Upload file"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m18.375 12.739-7.693 7.693a4.5 4.5 0 0 1-6.364-6.364l10.94-10.94A3 3 0 1 1 19.5 7.372L8.552 18.32m.009-.01-.01.01m5.699-9.941-7.81 7.81a1.5 1.5 0 0 0 2.112 2.13"/></svg><input type="file" id="fileInput" multiple accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.py,.js,.ts,.html,.css,.md,.txt,.json,.yaml,.yml,.xml,.sh,.sql,.php,.go,.rs,.java,.cpp,.c,.cs,.rb,.swift,.kt,.vue,.jsx,.tsx,.env,.toml,.ini" onchange="handleFiles(this.files)" class="hidden"></label>
+<textarea id="input" placeholder="Ask about code or testing..." rows="1" class="flex-1 bg-transparent border-none outline-none text-sm text-gray-700" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+<button id="sendBtn" onclick="sendMessage()" class="flex-shrink-0 w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center hover:bg-indigo-700 disabled:opacity-30 disabled:cursor-not-allowed" title="Send"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4.5 10.5 12 3m0 0 7.5 7.5M12 3v18"/></svg></button>
+</div><p class="text-[10px] text-gray-400 text-center mt-2">Enter to send · Shift+Enter new line · 📎 upload file (max 10MB)</p></div></div>
+
+<div class="flex-shrink-0 px-5 py-2 border-t border-gray-200 bg-white/50"><p class="text-[10px] text-gray-400 text-center">Jackode Engineer v1.0 · AI Testing Agent</p></div>
+</aside>
+
+<script>
+{% raw %}
+function switchTab(tab){
+var O=document.getElementById('overviewContent'),S=document.getElementById('chatSidebar'),P=document.getElementById('previewPanel'),C=document.getElementById('chatArea'),tO=document.getElementById('tabOverview'),tC=document.getElementById('tabChat');
+if(tab==='chat'){O.style.display='none';S.style.display='flex';P.style.display='none';C.style.display='flex';tO.className='pb-3 text-sm font-medium text-gray-400 border-b-2 border-transparent hover:text-gray-600';tC.className='pb-3 text-sm font-semibold text-gray-900 border-b-2 border-indigo-500 -mb-[1px]';loadSessions();autoResize(document.getElementById('input'));}
+else{O.style.display='';S.style.display='none';P.style.display='';C.style.display='none';tC.className='pb-3 text-sm font-medium text-gray-400 border-b-2 border-transparent hover:text-gray-600';tO.className='pb-3 text-sm font-semibold text-gray-900 border-b-2 border-indigo-500 -mb-[1px]';}}
+var currentSessionId=null,isLoading=false,pendingFiles=[];
+var messagesEl=document.getElementById('messages'),inputEl=document.getElementById('input'),sendBtn=document.getElementById('sendBtn'),welcomeEl=document.getElementById('welcome'),historyList=document.getElementById('historyList'),attachedFiles=document.getElementById('attachedFiles'),fileInput=document.getElementById('fileInput');
+marked.setOptions({breaks:true,gfm:true});
+async function loadSessions(){try{var r=await fetch('/sessions');renderSessions(await r.json());}catch(e){historyList.innerHTML='<p class="text-gray-400 italic px-1 py-2">Unable to load</p>';}}
+function renderSessions(s){if(!s.length){historyList.innerHTML='<p class="text-gray-400 italic px-1 py-2">No history yet</p>';return;}
+historyList.innerHTML=s.map(function(sess){return'<div class="flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer hover:bg-gray-100 '+(sess.id===currentSessionId?'session-item-active':'')+'" onclick="loadSession(\''+sess.id+'\',this)"><span class="truncate flex-1" title="'+escHtml(sess.title)+'">💬 '+escHtml(sess.title)+'</span><button class="text-gray-300 hover:text-red-500 flex-shrink-0" onclick="deleteSession(event,\''+sess.id+'\')">✕</button></div>';}).join('');}
+async function loadSession(id,el){if(currentSessionId===id)return;currentSessionId=id;document.querySelectorAll('#historyList > div').forEach(function(i){i.classList.remove('session-item-active');});el.classList.add('session-item-active');messagesEl.innerHTML='';welcomeEl.style.display='none';messagesEl.appendChild(welcomeEl);try{var r=await fetch('/history/'+id),msgs=await r.json();if(!msgs.length){welcomeEl.style.display='flex';return;}welcomeEl.style.display='none';msgs.forEach(function(m){var role=m.role==='assistant'?'ai':'user',b=addMessage(role,m.content);if(role==='ai')renderMarkdown(b,m.content);else b.innerHTML=formatUserContent(m.content);});}catch(e){}}
+async function deleteSession(e,id){e.stopPropagation();await fetch('/session/'+id,{method:'DELETE'});if(currentSessionId===id){currentSessionId=null;messagesEl.innerHTML='';messagesEl.appendChild(welcomeEl);welcomeEl.style.display='flex';}await loadSessions();}
+async function newChat(){currentSessionId=null;pendingFiles=[];renderAttached();messagesEl.innerHTML='';messagesEl.appendChild(welcomeEl);welcomeEl.style.display='flex';inputEl.value='';autoResize(inputEl);document.querySelectorAll('#historyList > div').forEach(function(i){i.classList.remove('session-item-active');});}
+async function handleFiles(files){for(var i=0;i<files.length;i++){var f=files[i],fd=new FormData();fd.append('file',f);var idx=pendingFiles.length;pendingFiles.push({filename:f.name,type:'uploading'});renderAttached();try{var r=await fetch('/upload',{method:'POST',body:fd}),d=await r.json();if(d.error){pendingFiles.splice(idx,1);alert('Upload error: '+d.error);}else pendingFiles[idx]=d;}catch(e){pendingFiles.splice(idx,1);alert('Upload failed: '+e.message);}renderAttached();}fileInput.value='';}
+function renderAttached(){if(!pendingFiles.length){attachedFiles.style.display='none';return;}attachedFiles.style.display='flex';attachedFiles.innerHTML=pendingFiles.map(function(f,i){var icon=f.type==='uploading'?'⏳':f.type==='image'?'🖼️':f.type==='pdf'?'📄':'📝';return'<div class="flex items-center gap-1.5 bg-gray-100 rounded-full px-2.5 py-1 text-xs">'+icon+' <span class="truncate max-w-[160px]">'+escHtml(f.filename||'...')+'</span><span class="cursor-pointer text-gray-400 hover:text-red-500 ml-1" onclick="removeFile('+i+')">✕</span></div>';}).join('');}
+function removeFile(i){pendingFiles.splice(i,1);renderAttached();}
+function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,120)+'px';}
+function handleKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
+function sendQuick(p){inputEl.value=p;inputEl.focus();autoResize(inputEl);}
+function sendChip(t){inputEl.value=t;sendMessage();}
+function addMessage(role,content){if(welcomeEl.style.display!=='none')welcomeEl.style.display='none';var m=document.createElement('div');m.className='flex gap-3 mb-4 '+(role==='user'?'flex-row-reverse':'');var a=document.createElement('div');a.className='w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-white text-xs font-bold '+(role==='ai'?'bg-gradient-to-br from-emerald-400 to-emerald-600':'bg-indigo-500');a.textContent=role==='ai'?'J':'U';var b=document.createElement('div');b.className='chat-bubble px-3.5 py-2.5 text-sm '+(role==='ai'?'bg-white border border-gray-200 rounded-2xl rounded-tl-lg':'bg-indigo-600 text-white rounded-2xl rounded-tr-lg');if(role==='ai')b.innerHTML='<div class="typing"><span></span><span></span><span></span></div>';else b.innerHTML=formatUserContent(content);m.appendChild(a);m.appendChild(b);messagesEl.appendChild(m);messagesEl.scrollTop=messagesEl.scrollHeight;return b;}
+function formatUserContent(c){var re=/\[FILE:([^\]]+)\]\[PREVIEW:([^\]]*)\]\[TYPE:([^\]]+)\]/g,h='',li=0,m;while((m=re.exec(c))!==null){var bf=c.slice(li,m.index).trim();if(bf)h+='<div class="mb-1.5">'+escHtml(bf)+'</div>';var fn=m[1],pv=m[2],tp=m[3];if(tp==='image')h+='<div class="mb-2"><img src="'+pv+'" alt="'+escHtml(fn)+'" class="max-w-[200px] rounded-lg border border-gray-200"><div class="text-[10px] text-gray-400 mt-1">🖼️ '+escHtml(fn)+'</div></div>';else{var ic=tp==='pdf'?'📄':'📝';h+='<div class="inline-flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-1.5 mb-1.5 text-xs"><span>'+ic+'</span><span class="truncate max-w-[140px]">'+escHtml(fn)+'</span></div>';}li=m.index+m[0].length;}var rm=c.slice(li).trim();if(rm)h+='<div'+(h?' class="mt-2"':'')+'>'+escHtml(rm)+'</div>';return h||escHtml(c);}
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function renderMarkdown(bubble,text){bubble.innerHTML=marked.parse(text);bubble.querySelectorAll('pre code').forEach(function(block){hljs.highlightElement(block);var pre=block.parentElement;pre.style.position='relative';var btn=document.createElement('button');btn.className='copy-btn';btn.textContent='copy';btn.onclick=function(){navigator.clipboard.writeText(block.innerText);btn.textContent='copied!';setTimeout(function(){btn.textContent='copy';},2000);};pre.appendChild(btn);});}
+async function sendMessage(){var text=inputEl.value.trim();if((!text&&!pendingFiles.length)||isLoading)return;isLoading=true;sendBtn.disabled=true;inputEl.value='';autoResize(inputEl);var uc=text,dc=text,ftags=[];
+for(var i=0;i<pendingFiles.length;i++){var f=pendingFiles[i];if(f.type==='image'){uc+='\n\n[Pengguna mengirim gambar: '+f.filename+']';ftags.push('[FILE:'+f.filename+'][PREVIEW:'+f.preview+'][TYPE:image]');}else if(f.type==='pdf'){uc+='\n\n[Isi file PDF "'+f.filename+'" ('+f.pages+' halaman)]:\n'+f.content;ftags.push('[FILE:'+f.filename+'][PREVIEW:'+f.preview+'][TYPE:pdf]');}else if(f.type==='text'){uc+='\n\n[Isi file "'+f.filename+'"]:\n```'+(f.ext?f.ext.slice(1):'')+'\n'+f.content+'\n```';ftags.push('[FILE:'+f.filename+'][PREVIEW:'+f.preview+'][TYPE:text]');}}
+var fd=ftags.join('')+(text?'\n'+text:'');addMessage('user',fd);pendingFiles=[];renderAttached();
+var aiB=addMessage('ai',''),full='',rsid=currentSessionId;
+try{var resp=await fetch('/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:uc,session_id:currentSessionId})}),reader=resp.body.getReader(),dec=new TextDecoder();
+while(true){var r=await reader.read();if(r.done)break;var lines=dec.decode(r.value).split('\n');for(var j=0;j<lines.length;j++){var l=lines[j];if(!l.startsWith('data: '))continue;var d=l.slice(6);if(d==='[DONE]')break;try{var p=JSON.parse(d);if(p.error){aiB.innerHTML='<div class="text-red-500 text-sm">❌ '+p.error+'</div>';break;}if(p.session_id)rsid=p.session_id;if(p.text){full+=p.text;renderMarkdown(aiB,full);messagesEl.scrollTop=messagesEl.scrollHeight;}}catch(e){}}}
+if(!currentSessionId&&rsid)currentSessionId=rsid;await loadSessions();var el=document.querySelector('#historyList div[onclick*="'+currentSessionId+'"]');if(el){document.querySelectorAll('#historyList > div').forEach(function(i){i.classList.remove('session-item-active');});el.classList.add('session-item-active');}}catch(e){aiB.innerHTML='<div class="text-red-500 text-sm">❌ Connection error.</div>';}
+isLoading=false;sendBtn.disabled=false;inputEl.focus();}
+{% endraw %}</script>
+</body>
+</html>

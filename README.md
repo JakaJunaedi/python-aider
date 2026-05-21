@@ -1,4 +1,4 @@
-# ⚡ CodeMind — AI Coding Assistant
+# ⚡ Jackode — AI Coding Assistant
 
 Aplikasi web **coding assistant** berbasis **Gemma 4** via Google AI Studio API, dibangun dengan **FastAPI + Python**. Mendukung streaming response, syntax highlighting, dan berbagai quick actions untuk membantu produktivitas coding kamu.
 
