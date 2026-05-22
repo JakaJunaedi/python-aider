@@ -15,9 +15,9 @@ import os
 
 load_dotenv()
 
-OPENROUTER_KEY = os.getenv("API_KEY_OPENROUTER", "")
-OPENROUTER_URL = os.getenv("API_URL_OPENROUTER", "https://openrouter.ai/api/v1/chat/completions")
-MODEL_NAME = os.getenv("MODEL_NAME", "google/gemini-2.5-flash-lite")
+DEEPSEEK_KEY = os.getenv("DEEPSEEK_API_KEY", "")
+DEEPSEEK_URL = os.getenv("DEEPSEEK_API_URL", "https://api.deepseek.com/v1/chat/completions")
+MODEL_NAME = os.getenv("MODEL_NAME", "deepseek-v4-pro")
 
 # In-memory store
 sessions_store: dict = {}
@@ -136,10 +136,10 @@ async def chat_stream(request: Request):
         full = ""
         try:
             async with httpx.AsyncClient(timeout=120) as client:
-                async with client.stream("POST", OPENROUTER_URL, json={
+                async with client.stream("POST", DEEPSEEK_URL, json={
                     "model": MODEL_NAME, "messages": payload, "stream": True, "temperature": 0.7, "max_tokens": 2048
-                }, headers={"Authorization": f"Bearer {OPENROUTER_KEY}", "Content-Type": "application/json"}) as resp:
-                    # ── Periksa HTTP status dari OpenRouter ──
+                }, headers={"Authorization": f"Bearer {DEEPSEEK_KEY}", "Content-Type": "application/json"}) as resp:
+                    # ── Periksa HTTP status dari DeepSeek ──
                     if resp.status_code != 200:
                         try:
                             body = await resp.aread()
