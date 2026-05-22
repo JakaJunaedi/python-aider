@@ -57,3 +57,11 @@ Thumbs.db
 
 chat_history.db
 *.db
+
+.deepseek
+
+# Embedded Python runtime
+Python/
+
+# Debug / temp scripts
+_*.py
